@@ -100,7 +100,7 @@ func main() {
 		TLSClientConfig: tlsconf,
 		Backoff:         expBackoff(config.Backoff),
 		Tunnels:         tunnels(config.Tunnels),
-		Proxy:           proxy(config.Tunnels, logger),
+		Proxy:           proxy(config.Tunnels, config.InsecureSkipVerifyTunnels, logger),
 		Logger:          logger,
 	})
 	if err != nil {
@@ -168,7 +168,7 @@ func tunnels(m map[string]*Tunnel) map[string]*proto.Tunnel {
 	return p
 }
 
-func proxy(m map[string]*Tunnel, logger log.Logger) tunnel.ProxyFunc {
+func proxy(m map[string]*Tunnel, skipVerify bool, logger log.Logger) tunnel.ProxyFunc {
 	httpURL := make(map[string]*url.URL)
 	tcpAddr := make(map[string]string)
 
@@ -186,7 +186,7 @@ func proxy(m map[string]*Tunnel, logger log.Logger) tunnel.ProxyFunc {
 	}
 
 	return tunnel.Proxy(tunnel.ProxyFuncs{
-		HTTP: tunnel.NewMultiHTTPProxy(httpURL, log.NewContext(logger).WithPrefix("proxy", "HTTP")).Proxy,
+		HTTP: tunnel.NewMultiHTTPProxy(httpURL, skipVerify, log.NewContext(logger).WithPrefix("proxy", "HTTP")).Proxy,
 		TCP:  tunnel.NewMultiTCPProxy(tcpAddr, log.NewContext(logger).WithPrefix("proxy", "TCP")).Proxy,
 	})
 }

@@ -7,6 +7,7 @@ package tunnel
 import (
 	"bufio"
 	"context"
+	"crypto/tls"
 	"io"
 	"net"
 	"net/http"
@@ -36,7 +37,7 @@ type HTTPProxy struct {
 
 // NewHTTPProxy creates a new direct HTTPProxy, everything will be proxied to
 // localURL.
-func NewHTTPProxy(localURL *url.URL, logger log.Logger) *HTTPProxy {
+func NewHTTPProxy(localURL *url.URL, skipVerify bool, logger log.Logger) *HTTPProxy {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -47,12 +48,16 @@ func NewHTTPProxy(localURL *url.URL, logger log.Logger) *HTTPProxy {
 	}
 	p.ReverseProxy.Director = p.Director
 
+	if skipVerify {
+		insecureSkipVerifyTunnels(p)
+	}
+
 	return p
 }
 
 // NewMultiHTTPProxy creates a new dispatching HTTPProxy, requests may go to
 // different backends based on localURLMap.
-func NewMultiHTTPProxy(localURLMap map[string]*url.URL, logger log.Logger) *HTTPProxy {
+func NewMultiHTTPProxy(localURLMap map[string]*url.URL, skipVerify bool, logger log.Logger) *HTTPProxy {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -62,6 +67,10 @@ func NewMultiHTTPProxy(localURLMap map[string]*url.URL, logger log.Logger) *HTTP
 		logger:      logger,
 	}
 	p.ReverseProxy.Director = p.Director
+
+	if skipVerify {
+		insecureSkipVerifyTunnels(p)
+	}
 
 	return p
 }
@@ -185,4 +194,13 @@ func (p *HTTPProxy) localURLFor(u *url.URL) *url.URL {
 	}
 
 	return p.localURL
+}
+
+// Add InsecureSkipVerify to HTTPProxy Transport
+func insecureSkipVerifyTunnels(p *HTTPProxy) {
+	p.ReverseProxy.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
 }

@@ -42,12 +42,13 @@ type Tunnel struct {
 
 // ClientConfig is a tunnel client configuration.
 type ClientConfig struct {
-	ServerAddr string             `yaml:"server_addr"`
-	TLSCrt     string             `yaml:"tls_crt"`
-	TLSKey     string             `yaml:"tls_key"`
-	RootCA     string             `yaml:"root_ca"`
-	Backoff    BackoffConfig      `yaml:"backoff"`
-	Tunnels    map[string]*Tunnel `yaml:"tunnels"`
+	ServerAddr                string             `yaml:"server_addr"`
+	TLSCrt                    string             `yaml:"tls_crt"`
+	TLSKey                    string             `yaml:"tls_key"`
+	RootCA                    string             `yaml:"root_ca"`
+	Backoff                   BackoffConfig      `yaml:"backoff"`
+	Tunnels                   map[string]*Tunnel `yaml:"tunnels"`
+	InsecureSkipVerifyTunnels bool               `yaml:"insecure_skip_verify_tunnels"`
 }
 
 func loadClientConfigFromFile(file string) (*ClientConfig, error) {
